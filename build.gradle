@@ -1,12 +1,14 @@
 buildscript {
     ext {
         kotlinVersion = "1.0.5"
+        awsSdkVersion = "1.11.52"
+        slf4jVersion = "1.7.21"
     }
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     }
 }
 
@@ -17,9 +19,11 @@ repositories {
 }
 
 dependencies {
-    compile("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
-    testCompile("org.jetbrains.kotlin:kotlin-test:${kotlinVersion}")
-    testCompile("org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}")
+    compile("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    compile("org.slf4j:slf4j-api:$slf4jVersion")
+    compile("com.amazonaws:aws-java-sdk-core:$awsSdkVersion")
+    testCompile("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }
 
 task wrapper(type: Wrapper) {

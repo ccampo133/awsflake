@@ -1,20 +1,16 @@
 package me.ccampo.awsflake
 
-import com.amazonaws.util.EC2MetadataUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import spark.Spark.get
 
-private val region = AWSRegion.parse(EC2MetadataUtils.getEC2InstanceRegion()).ordinal
-
-private val ip = getIpOctets()
-
-private fun getIpOctets(): Pair<Int, Int> {
-    val (oct1, oct2) = EC2MetadataUtils.getPrivateIpAddress()
-            .split(".")
-            .takeLast(2)
-            .map { Integer.parseInt(it) }
-    return Pair(oct1, oct2)
-}
 
 fun main(args: Array<String>) {
+    //val region = AWSRegion.parse(EC2MetadataUtils.getEC2InstanceRegion()).ordinal
+    //val ip = EC2MetadataUtils.getPrivateIpAddress().split(".").takeLast(2).map { Integer.parseInt(it) }
+    val log: Logger = LoggerFactory.getLogger("AWSFlake")
+    get("/id") { req, res -> encode(generate(1, Pair(10, 128), logger = log)) }
+
 /*
     val t = (1L shl 41) - 1
     val r = (1 shl 5) - 1

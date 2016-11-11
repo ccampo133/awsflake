@@ -3,6 +3,7 @@ buildscript {
         kotlinVersion = "1.0.5"
         awsSdkVersion = "1.11.52"
         slf4jVersion = "1.7.21"
+        sparkVersion = "2.5.2"
     }
     repositories {
         mavenCentral()
@@ -14,6 +15,21 @@ buildscript {
 
 apply plugin: "kotlin"
 
+version = "0.1.0"
+
+jar {
+    baseName = "awsflake"
+    archivesBaseName = "awsflake"
+    manifest {
+        attributes("Implementation-Title": "Snowflake ID Generator for AWS",
+                "Implementation-Version": version,
+                "Main-Class": "me.ccampo.awsflake.AWSFlakeKt")
+    }
+
+    // Create a fat jar
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
 repositories {
     mavenCentral()
 }
@@ -21,7 +37,9 @@ repositories {
 dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
     compile("org.slf4j:slf4j-api:$slf4jVersion")
+    compile("org.slf4j:slf4j-simple:$slf4jVersion")
     compile("com.amazonaws:aws-java-sdk-core:$awsSdkVersion")
+    compile("com.sparkjava:spark-core:$sparkVersion")
     testCompile("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }

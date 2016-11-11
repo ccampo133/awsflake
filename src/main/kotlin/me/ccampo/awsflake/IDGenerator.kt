@@ -80,20 +80,9 @@ private fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: I
         logger.debug("Sequence: {}", seq)
         logger.debug("Sequence binary: {}", Integer.toBinaryString(seq))
         logger.debug("Part 1: {}", part1)
-        logger.debug("Part 1 expect: {}{}{}",
-                String.format("%41s", BigInteger.valueOf(timestamp).toString(2)),
-                String.format("%5s", Integer.toBinaryString(regionOrdinal)),
-                String.format("%16s", Integer.toBinaryString(machineId))
-        )
-        logger.debug("ID: {}", id)
         logger.debug("Part 1 binary: {}",
                 String.format("%41s", BigInteger.valueOf(part1).toString(2)).replace(" ", "0"))
-        logger.debug("ID expect: {}{}{}{}",
-                String.format("%41s", BigInteger.valueOf(timestamp).toString(2)),
-                String.format("%5s", Integer.toBinaryString(regionOrdinal)),
-                String.format("%16s", Integer.toBinaryString(machineId)),
-                String.format("%15s", Integer.toBinaryString(seq))
-        )
+        logger.debug("ID: {}", id)
         logger.debug("ID binary: {}", String.format("%77s", id.toString(2)).replace(" ", "0"))
     }
     return id

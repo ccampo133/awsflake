@@ -1,27 +1,83 @@
 buildscript {
     ext {
         kotlinVersion = "1.0.5"
+        awsSdkVersion = "1.11.52"
+        slf4jVersion = "1.7.21"
+        sparkVersion = "2.5.2"
+        junitVersion = "4.12"
+        assertJVersion = "3.5.2"
+        konfigVersion = "1.4.1.0"
+        dockerPluginVersion = "1.2"
     }
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("se.transmode.gradle:gradle-docker:${dockerPluginVersion}")
     }
 }
 
+apply plugin: "docker"
 apply plugin: "kotlin"
+
+version = "1.0.0"
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+}
+
+jar {
+    baseName = "awsflake"
+    archivesBaseName = "awsflake"
+    manifest {
+        attributes("Implementation-Title": "Snowflake ID Generator for AWS",
+                "Implementation-Version": version,
+                "Main-Class": "me.ccampo.awsflake.AWSFlakeKt")
+    }
+
+    // Create a fat jar
+    from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+docker {
+    baseImage = "java:8-alpine"
+    if (dockerUseSudo.toBoolean())
+        dockerBinary = "sudo docker"
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
-    testCompile("org.jetbrains.kotlin:kotlin-test:${kotlinVersion}")
-    testCompile("org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}")
+    compile("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    compile("org.slf4j:slf4j-api:$slf4jVersion")
+    compile("org.slf4j:slf4j-simple:$slf4jVersion")
+    compile("com.amazonaws:aws-java-sdk-core:$awsSdkVersion")
+    compile("com.sparkjava:spark-core:$sparkVersion")
+    compile("com.natpryce:konfig:$konfigVersion")
+    testCompile("junit:junit:$junitVersion")
+    testCompile("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testCompile("org.assertj:assertj-core:$assertJVersion")
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = "3.1"
+}
+
+task buildDocker(type: Docker, dependsOn: build) {
+    applicationName = "awsflake"
+    tagVersion = "latest"
+    dryRun = dockerDryRun.toBoolean()
+    push = dockerPush.toBoolean()
+
+    if (dockerRegistry != null && !dockerRegistry.isEmpty())
+        registry = dockerRegistry
+
+    addFile("${jar.archivePath}", ".")
+
+    defaultCommand(["java", "-jar", "${jar.archiveName}"])
+
 }

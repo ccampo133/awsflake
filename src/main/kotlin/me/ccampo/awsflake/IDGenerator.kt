@@ -19,7 +19,7 @@ private var sequence = 0
 /**
  * The ID is an 77 bit integer of the following composition:
  *
- * 41 bits: time since epoch, in millis
+ * 41 bits: time since epoch, in millis (this gives us a max of ~69.7 years from the epoch)
  *  5 bits: region identifier (1-32, see "regions")
  * 16 bits: last two octets of private IP (unique per VPC /16 netmask)
  * 15 bits: sequence number
@@ -29,9 +29,13 @@ private var sequence = 0
 fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime = defaultEpoch, logger: Logger? = null): BigInteger {
     var timestamp = Duration.between(epoch, LocalDateTime.now()).toMillis()
 
+    if (timestamp >= 1L shl TIME_BIT_LEN ) {
+        throw MaxTimestampExceededException("Max timestamp exceeded - please restart with a more recent epoch")
+    }
+
     // Clock moved backwards - refuse to generate ID
     if (timestamp < lastTimestamp) {
-        TODO("Clock moved backwards - need a better error condition -ccampo 2016-11-10")
+        throw ClockMovedBackwardsException("Clock moved backwards - ID cannot be generated")
     }
 
     // TODO: is locking on sequence sufficient? -ccampo 2016-11-10
@@ -63,7 +67,7 @@ fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime = defaultEpoc
     return generate(timestamp, region, machineId, sequence, logger = logger)
 }
 
-private fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: Int, logger: Logger?):
+internal fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: Int, logger: Logger? = null):
         BigInteger {
     val part1: Long = timestamp.shl(REGION_BIT_LEN).shl(IP_BIT_LEN)
             .or(regionOrdinal.toLong().shl(IP_BIT_LEN))
@@ -87,3 +91,6 @@ private fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: I
     }
     return id
 }
+
+class MaxTimestampExceededException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)
+class ClockMovedBackwardsException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)

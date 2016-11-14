@@ -6,6 +6,7 @@ buildscript {
         sparkVersion = "2.5.2"
         junitVersion = "4.12"
         assertJVersion = "3.5.2"
+        konfigVersion = "1.4.1.0"
     }
     repositories {
         mavenCentral()
@@ -42,6 +43,7 @@ dependencies {
     compile("org.slf4j:slf4j-simple:$slf4jVersion")
     compile("com.amazonaws:aws-java-sdk-core:$awsSdkVersion")
     compile("com.sparkjava:spark-core:$sparkVersion")
+    compile("com.natpryce:konfig:$konfigVersion")
     testCompile("junit:junit:$junitVersion")
     testCompile("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

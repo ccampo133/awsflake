@@ -6,7 +6,7 @@ import java.math.BigInteger
 // Base62 charset sorted to quickly calculate decimal equivalency by compensating.
 private val charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray()
 
-fun encode(value: BigInteger): String {
+fun encode(value: BigInteger, minLen: Int? = null): String {
     var num = value
     val sb = StringBuilder(1)
     do {
@@ -14,6 +14,14 @@ fun encode(value: BigInteger): String {
         sb.insert(0, charset[i])
         num = num.divide(BigInteger.valueOf(62))
     } while (num > BigInteger.ZERO)
+
+    if (minLen != null && sb.length < minLen) {
+        val padLen = minLen - sb.length
+        val pad = StringBuilder(padLen)
+        for (i in 1..padLen) pad.append("0")
+        return pad.append(sb).toString()
+    }
+
     return sb.toString()
 }
 

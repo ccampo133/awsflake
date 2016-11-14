@@ -5,6 +5,7 @@ buildscript {
         slf4jVersion = "1.7.21"
         sparkVersion = "2.5.2"
         junitVersion = "4.12"
+        assertJVersion = "3.5.2"
     }
     repositories {
         mavenCentral()
@@ -44,6 +45,7 @@ dependencies {
     testCompile("junit:junit:$junitVersion")
     testCompile("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testCompile("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testCompile("org.assertj:assertj-core:$assertJVersion")
 }
 
 task wrapper(type: Wrapper) {

@@ -15,6 +15,7 @@ fun encode(value: BigInteger, minLen: Int? = null): String {
         num = num.divide(BigInteger.valueOf(62))
     } while (num > BigInteger.ZERO)
 
+    // Pad with zeros if necessary
     if (minLen != null && sb.length < minLen) {
         val padLen = minLen - sb.length
         val pad = StringBuilder(padLen)
@@ -30,11 +31,7 @@ fun decode(value: String): BigInteger {
     var power = BigInteger.ONE
     for (i in value.length - 1 downTo 0) {
         var digit = value[i].toInt() - 48
-        if (digit > 42) {
-            digit -= 13
-        } else if (digit > 9) {
-            digit -= 7
-        }
+        if (digit > 42) digit -= 13 else if (digit > 9) digit -= 7
         result = result.plus(power.times(BigInteger.valueOf(digit.toLong())))
         power = power.times(BigInteger.valueOf(62))
     }

@@ -7,18 +7,25 @@ buildscript {
         junitVersion = "4.12"
         assertJVersion = "3.5.2"
         konfigVersion = "1.4.1.0"
+        dockerPluginVersion = "1.2"
     }
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("se.transmode.gradle:gradle-docker:${dockerPluginVersion}")
     }
 }
 
+apply plugin: "docker"
 apply plugin: "kotlin"
 
 version = "0.1.0"
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+}
 
 jar {
     baseName = "awsflake"
@@ -31,6 +38,12 @@ jar {
 
     // Create a fat jar
     from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+docker {
+    baseImage = "java:8-alpine"
+    if (dockerUseSudo.toBoolean())
+        dockerBinary = "sudo docker"
 }
 
 repositories {
@@ -53,6 +66,18 @@ dependencies {
 task wrapper(type: Wrapper) {
     gradleVersion = "3.1"
 }
-sourceSets {
-    main.java.srcDirs += 'src/main/kotlin'
+
+task buildDocker(type: Docker, dependsOn: build) {
+    applicationName = "awsflake"
+    tagVersion = "latest"
+    dryRun = dockerDryRun.toBoolean()
+    push = dockerPush.toBoolean()
+
+    if (dockerRegistry != null && !dockerRegistry.isEmpty())
+        registry = dockerRegistry
+
+    addFile("${jar.archivePath}", ".")
+
+    defaultCommand(["java", "-jar", "${jar.archiveName}"])
+
 }

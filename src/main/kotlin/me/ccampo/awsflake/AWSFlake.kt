@@ -7,6 +7,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spark.Spark.get
 import spark.Spark.port
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 val log: Logger = LoggerFactory.getLogger("AWSFlake")
 
@@ -15,6 +17,7 @@ class Config {
         val port by intType
         val region by stringType
         val ip by stringType
+        val epoch by stringType
     }
 }
 
@@ -42,11 +45,18 @@ fun main(args: Array<String>) {
         }
     }
 
+    val epoch: LocalDateTime? = when {
+        config[Config.server.epoch].isBlank() -> null
+        else -> {
+            LocalDateTime.parse(config[Config.server.epoch], DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        }
+    }
+
     val (oct1, oct2) = ip.split(".").takeLast(2).map { Integer.parseInt(it) }
-    log.info("Region = {}, IP = {}, Octets = {}, {}", region, ip, oct1, oct2)
+    log.info("Region = {}, IP = {}, Octets = {}, {}, Epoch = {}", region, ip, oct1, oct2, epoch)
 
     get("/id") { req, resp ->
         val minLen: Int? = req.queryParams("minLength")?.toInt()
-        encode(generate(region.ordinal, Pair(oct1, oct2), logger = log), minLen = minLen)
+        encode(generate(region.ordinal, Pair(oct1, oct2), epoch = epoch, logger = log), minLen = minLen)
     }
 }

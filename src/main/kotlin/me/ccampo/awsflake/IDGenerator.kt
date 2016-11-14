@@ -26,8 +26,8 @@ private var sequence = 0
  *
  * @author Chris Campo
  */
-fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime = defaultEpoch, logger: Logger? = null): BigInteger {
-    var timestamp = Duration.between(epoch, LocalDateTime.now()).toMillis()
+fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime? = null, logger: Logger? = null): BigInteger {
+    var timestamp = Duration.between(epoch ?: defaultEpoch, LocalDateTime.now()).toMillis()
 
     if (timestamp >= 1L shl TIME_BIT_LEN ) {
         throw MaxTimestampExceededException("Max timestamp exceeded - please restart with a more recent epoch")

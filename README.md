@@ -32,6 +32,26 @@ Combined with the region identifier, and you can uniquely identify an EC2 instan
 multi-region AWS cluster. THIS DOES NOT WORK FOR MULTI-VPC CLUSTERS WITHIN THE SAME VPC,
 as the last octets of the IP address are only guaranteed to be unique within a single VPC.
 
+### Build and Run
+
+To build AWSFlake, use the Gradle `build` task.
+
+On Unix/Linux/OS X
+
+    ./gradlew build
+
+On Windows
+
+    gradlew.bat build
+
+You can then run the jar file (in the `build/libs` directory) as standalone:
+
+    java -jar awsflake-<version>.jar
+
+AWSFlake can also be built as a Docker image and run in a container (see "deployment" below).
+It also accepts various environment variables (or Java system properties), and again, these
+are detailed below.
+
 ### Deployment
 
 Once deployed, AWSFlake requires no coordination between nodes. You can scale horizontally with

@@ -7,26 +7,30 @@ import java.time.LocalDateTime
 
 
 const val TIME_BIT_LEN = 41
-const val REGION_BIT_LEN = 5
-const val IP_BIT_LEN = 16
-const val SEQ_BIT_LEN = 15
-const val SEQUENCE_MAX = 32768 // 2^15
+const val NODE_ID_LEN = 10
+const val SEQ_BIT_LEN = 12
+const val SEQUENCE_MAX = 4096 // 2^12
+const val NODE_ID_MAX = 1023
 
 private val defaultEpoch = LocalDateTime.of(2016, 1, 1, 0, 0, 0, 0)
 private var lastTimestamp = -1L
 private var sequence = 0
 
 /**
- * The ID is an 77 bit integer of the following composition:
+ * The ID is an 64 bit signed integer of the following composition:
  *
  * 41 bits: time since epoch, in millis (this gives us a max of ~69.7 years from the epoch)
- *  5 bits: region identifier (1-32, see "regions")
- * 16 bits: last two octets of private IP (unique per VPC /16 netmask)
- * 15 bits: sequence number
+ * 10 bits: the manually assigned node ID (0-1024)
+ * 12 bits: sequence number
  *
  * @author Chris Campo
  */
-fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime? = null, logger: Logger? = null): BigInteger {
+fun generate(nodeId: Short, epoch: LocalDateTime? = null, logger: Logger? = null): Long {
+
+    if (nodeId > NODE_ID_MAX || nodeId < 0) {
+        throw MaxNodeIdException("Node ID must be a value between 0 - $NODE_ID_MAX")
+    }
+
     var timestamp = Duration.between(epoch ?: defaultEpoch, LocalDateTime.now()).toMillis()
 
     if (timestamp >= 1L shl TIME_BIT_LEN ) {
@@ -41,7 +45,7 @@ fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime? = null, logg
     // TODO: is locking on sequence sufficient? -ccampo 2016-11-10
     synchronized(sequence) {
         if (lastTimestamp == timestamp) {
-            sequence = (sequence + 1) % SEQUENCE_MAX
+            sequence =  (sequence + 1) % SEQUENCE_MAX
             if (sequence == 0) {
                 // Basically a sleep - at this point we've exceeded the max sequence number,
                 // so we need to until the clock counts up one millisecond before we can
@@ -57,40 +61,26 @@ fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime? = null, logg
         lastTimestamp = timestamp
     }
 
-    if (logger != null && logger.isDebugEnabled) {
-        logger.debug("IP octets: {}, {}", ip.first, ip.second)
-        logger.debug("IP octet 1 binary: {}", Integer.toBinaryString(ip.first))
-        logger.debug("IP octet 2 binary: {}", Integer.toBinaryString(ip.second))
-    }
-
-    val machineId: Int = (ip.first shl 8) or ip.second
-    return generate(timestamp, region, machineId, sequence, logger = logger)
+    return generate(timestamp, nodeId, sequence, logger = logger)
 }
 
-internal fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: Int, logger: Logger? = null):
-        BigInteger {
-    val part1: Long = timestamp.shl(REGION_BIT_LEN).shl(IP_BIT_LEN)
-            .or(regionOrdinal.toLong().shl(IP_BIT_LEN))
-            .or(machineId.toLong())
-    val id: BigInteger = BigInteger.valueOf(part1).shiftLeft(SEQ_BIT_LEN).or(BigInteger.valueOf(seq.toLong()))
+internal fun generate(timestamp: Long, nodeId: Short, seq: Int, logger: Logger? = null): Long {
+    val id: Long = (((timestamp shl NODE_ID_LEN) shl SEQ_BIT_LEN) or (nodeId.toLong() shl SEQ_BIT_LEN)) or seq.toLong()
 
     if (logger != null && logger.isDebugEnabled) {
-        logger.debug("Timestamp : {}", timestamp)
+        logger.debug("Timestamp: {}", timestamp)
         logger.debug("Timestamp binary: {}", BigInteger.valueOf(timestamp).toString(2))
-        logger.debug("Region ordinal: {}", regionOrdinal)
-        logger.debug("Region ordinal binary: {}", Integer.toBinaryString(regionOrdinal))
-        logger.debug("Machine ID: {}", machineId)
-        logger.debug("Machine ID binary: {}", Integer.toBinaryString(machineId))
+        logger.debug("Node ID: {}", nodeId)
+        logger.debug("Node ID binary: {}", Integer.toBinaryString(nodeId.toInt()))
         logger.debug("Sequence: {}", seq)
         logger.debug("Sequence binary: {}", Integer.toBinaryString(seq))
-        logger.debug("Part 1: {}", part1)
-        logger.debug("Part 1 binary: {}",
-                String.format("%41s", BigInteger.valueOf(part1).toString(2)).replace(" ", "0"))
         logger.debug("ID: {}", id)
-        logger.debug("ID binary: {}", String.format("%77s", id.toString(2)).replace(" ", "0"))
+        logger.debug("ID binary: {}", String.format("%$64s", BigInteger.valueOf(id).toString(2)).replace(" ", "0"))
     }
+
     return id
 }
 
+class MaxNodeIdException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)
 class MaxTimestampExceededException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)
 class ClockMovedBackwardsException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)

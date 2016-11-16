@@ -1,6 +1,5 @@
 package me.ccampo.awsflake
 
-import com.amazonaws.util.EC2MetadataUtils
 import com.natpryce.konfig.*
 import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
 import org.slf4j.Logger
@@ -15,8 +14,7 @@ val log: Logger = LoggerFactory.getLogger("AWSFlake")
 class Config {
     companion object server : PropertyGroup() {
         val port by intType
-        val region by stringType
-        val ip by stringType
+        val nodeId by intType
         val epoch by stringType
     }
 }
@@ -29,20 +27,10 @@ fun main(args: Array<String>) {
     // Load some configuration properties
     port(config[Config.server.port])
 
-    val region: AWSRegion = when {
-        config[Config.server.region].isBlank() -> AWSRegion.parse(EC2MetadataUtils.getEC2InstanceRegion())
-        else -> {
-            log.warn("Overriding node region with value {}", config[Config.server.region])
-            AWSRegion.parse(config[Config.server.region])
-        }
-    }
+    val nodeId: Short = config[Config.server.nodeId].toShort()
 
-    val ip: String = when {
-        config[Config.server.ip].isBlank() -> EC2MetadataUtils.getPrivateIpAddress()
-        else -> {
-            log.warn("Overriding node private IP address with value {}", config[Config.server.ip])
-            config[Config.server.ip]
-        }
+    if (nodeId > NODE_ID_MAX || nodeId < 0) {
+        throw MaxNodeIdException("Node ID must be a value between 0 - $NODE_ID_MAX")
     }
 
     val epoch: LocalDateTime? = when {
@@ -52,11 +40,8 @@ fun main(args: Array<String>) {
         }
     }
 
-    val (oct1, oct2) = ip.split(".").takeLast(2).map { Integer.parseInt(it) }
-    log.info("Region = {}, IP = {}, Octets = {}, {}, Epoch = {}", region, ip, oct1, oct2, epoch)
+    log.info("Node ID = {}", nodeId)
+    if (epoch != null) log.info("Epoch = {}", epoch)
 
-    get("/id") { req, resp ->
-        val minLen: Int? = req.queryParams("minLength")?.toInt()
-        encode(generate(region.ordinal, Pair(oct1, oct2), epoch = epoch, logger = log), minLen = minLen)
-    }
+    get("/id") { req, resp -> generate(nodeId, epoch = epoch, logger = log) }
 }

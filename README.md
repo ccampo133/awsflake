@@ -5,32 +5,19 @@
 A [Snowflake](https://blog.twitter.com/2010/announcing-snowflake)-like service for generating GUIDs within 
 multi-regional AWS environments.
 
-AWSFlake generates a 77-bit unique identifier composed of the following information:
+AWSFlake generates a 64-bit unique identifier composed of the following information:
 
  * **41 bits**: time since epoch, in millis (this gives us a max of ~69.7 years from the epoch)
- * **5 bits**: region identifier (1-32, see "regions")
- * **16 bits**: last two octets of private IP (unique per VPC /16 netmask)
- * **15 bits**: sequence number; allows multiple IDs to be generated within the same milisecond
+ * **10 bits**: node ID; a manually assigned integer between 0 and 1023
+ * **12 bits**: sequence number; allows multiple IDs to be generated within the same millisecond
 
-The ID is [base 62 encoded](https://www.kerstner.at/2012/07/shortening-strings-using-base-62-encoding/),
-which is similar to base 64 encoding minus the non-alphanumeric characters (the charset [0-9A-Za-z]
-is used).
+The ID is presented as a standard 64 bit integer (long).
 
-### Regions
-The region identifier is an integer, 0-31, that corresponds to an AWS region. This mapping is 
-hardcoded currently and this mapping can be viewed in AWSRegion.kt. Currently there are only
-12 AWS regions, but this code can support up to a total of 32.
+### Node ID
 
-### IP Address (IP)
-
-The AWS EC2 instance private IP is used in the unique identifier generation algorithm. Since
-largest CIDR block AWS hands out for individual VPCs is /24, that directly implies that the
-last two octets of an instance's private IP can uniquely identify said instance within a
-single VPC.
-
-Combined with the region identifier, and you can uniquely identify an EC2 instance in a 
-multi-region AWS cluster. THIS DOES NOT WORK FOR MULTI-VPC CLUSTERS WITHIN THE SAME VPC,
-as the last octets of the IP address are only guaranteed to be unique within a single VPC.
+The node ID needs to be manually assigned at runtime to AWSFlake. If you are running a multi-server 
+cluster, the node ID must be unique to each node. That is, no two nodes can have the same node ID.
+This is to ensure that the IDs generated are truly unique across the cluster.
 
 ### Build and Run
 
@@ -54,8 +41,8 @@ are detailed below.
 
 ### Deployment
 
-Once deployed, AWSFlake requires no coordination between nodes. You can scale horizontally with
-thousands of nodes to generate thousands of IDs per second. It is recommended that at least a 2 node
+Once deployed, AWSFlake requires no coordination between nodes. You can scale horizontally with up to
+1023 total nodes to generate thousands of IDs per second. It is recommended that at least a 2 node
 cluster is used, behind a round-robin load balancer.
 
 AWSFlake can be built as a docker container and then deployed onto any of AWS's services 
@@ -73,23 +60,17 @@ as well. See `gradle.properties` for the list of supported properties.
 Once you have the docker image built, you can run a container. The following environment 
 variables are accepted as input:
  
-  * SERVER_PORT: the port on which AWSFlake listens on
+  * SERVER_NODEID: the assigned node ID (0 - 1023). THIS IS REQUIRED.
+  * SERVER_PORT: the port on which AWSFlake listens on (default: 8080)
   * SERVER_EPOCH: the epoch to calculate timestamps against. The more recent, the better. 
-  Use the same value across all nodes in your AWSFlake cluster. 
+  Use the same value across all nodes in your AWSFlake cluster. (default: Jan 1 2016 00:00:00 UTC)
   
-  Additionally the following variables *may* be provided for debugging/testing only. If 
-  omitted, they will be supplied by the Amazon EC2 metadata service automatically.
-  
-  * SERVER_REGION: the region of the node (ex: us-east-1)
-  * SERVER_IP: the private IP address of the node
-
 # API
 
 To generate a new ID, simply run the service and send an HTTP request to the `/id` 
-endpoint. The `minLength` query parameter can be provided to ensure IDs are returned
-with a minimum number of characters. Example using curl:
+endpoint. Example using curl:
 
-    $ curl -v -X GET "http://localhost:8080/id?minLength=13"
+    $ curl -v -X GET "http://localhost:8080/id"
     *   Trying ::1...
     * Connected to localhost (::1) port 8080 (#0)
     > GET /id?minLength=13 HTTP/1.1
@@ -104,7 +85,6 @@ with a minimum number of characters. Example using curl:
     < Server: Jetty(9.3.z-SNAPSHOT)
     <
     * Connection #0 to host localhost left intact
-    0aDuEi4sFesTo
+    2349816721408
     
-The generated, base 62 encoded 13 character ID in the above example is 
-`0aDuEi4sFesTo`.
+The generated ID in the above example is `2349816721408`.

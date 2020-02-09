@@ -1,0 +1,3 @@
+rootProject.name = 'awsflake'
+
+include('core', 'server')

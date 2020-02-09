@@ -1,4 +1,4 @@
-package me.ccampo.awsflake
+package me.ccampo.awsflake.core
 
 import java.math.BigInteger
 

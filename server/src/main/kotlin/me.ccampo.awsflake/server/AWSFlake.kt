@@ -1,8 +1,17 @@
-package me.ccampo.awsflake
+package me.ccampo.awsflake.server
 
 import com.amazonaws.util.EC2MetadataUtils
-import com.natpryce.konfig.*
+import com.natpryce.konfig.ConfigurationProperties
 import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
+import com.natpryce.konfig.EnvironmentVariables
+import com.natpryce.konfig.PropertyGroup
+import com.natpryce.konfig.getValue
+import com.natpryce.konfig.intType
+import com.natpryce.konfig.overriding
+import com.natpryce.konfig.stringType
+import me.ccampo.awsflake.core.AWSRegion
+import me.ccampo.awsflake.core.encode
+import me.ccampo.awsflake.core.generate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spark.Spark.get
@@ -13,7 +22,7 @@ import java.time.format.DateTimeFormatter
 val log: Logger = LoggerFactory.getLogger("AWSFlake")
 
 class Config {
-    companion object server : PropertyGroup() {
+    companion object Server : PropertyGroup() {
         val port by intType
         val region by stringType
         val ip by stringType
@@ -21,34 +30,34 @@ class Config {
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     val config = systemProperties() overriding
             EnvironmentVariables() overriding
             ConfigurationProperties.fromResource("defaults.properties")
 
     // Load some configuration properties
-    port(config[Config.server.port])
+    port(config[Config.port])
 
     val region: AWSRegion = when {
-        config[Config.server.region].isBlank() -> AWSRegion.parse(EC2MetadataUtils.getEC2InstanceRegion())
+        config[Config.region].isBlank() -> AWSRegion.parse(EC2MetadataUtils.getEC2InstanceRegion())
         else -> {
-            log.warn("Overriding node region with value {}", config[Config.server.region])
-            AWSRegion.parse(config[Config.server.region])
+            log.warn("Overriding node region with value {}", config[Config.region])
+            AWSRegion.parse(config[Config.region])
         }
     }
 
     val ip: String = when {
-        config[Config.server.ip].isBlank() -> EC2MetadataUtils.getPrivateIpAddress()
+        config[Config.ip].isBlank() -> EC2MetadataUtils.getPrivateIpAddress()
         else -> {
-            log.warn("Overriding node private IP address with value {}", config[Config.server.ip])
-            config[Config.server.ip]
+            log.warn("Overriding node private IP address with value {}", config[Config.ip])
+            config[Config.ip]
         }
     }
 
     val epoch: LocalDateTime? = when {
-        config[Config.server.epoch].isBlank() -> null
+        config[Config.epoch].isBlank() -> null
         else -> {
-            LocalDateTime.parse(config[Config.server.epoch], DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            LocalDateTime.parse(config[Config.epoch], DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         }
     }
 

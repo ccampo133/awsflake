@@ -1,4 +1,4 @@
-package me.ccampo.awsflake
+package me.ccampo.awsflake.core
 
 import org.slf4j.Logger
 import java.math.BigInteger
@@ -29,7 +29,7 @@ private var sequence = 0
 fun generate(region: Int, ip: Pair<Int, Int>, epoch: LocalDateTime? = null, logger: Logger? = null): BigInteger {
     var timestamp = Duration.between(epoch ?: defaultEpoch, LocalDateTime.now()).toMillis()
 
-    if (timestamp >= 1L shl TIME_BIT_LEN ) {
+    if (timestamp >= 1L shl TIME_BIT_LEN) {
         throw MaxTimestampExceededException("Max timestamp exceeded - please restart with a more recent epoch")
     }
 
@@ -92,5 +92,5 @@ internal fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: 
     return id
 }
 
-class MaxTimestampExceededException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)
-class ClockMovedBackwardsException(msg: String? = null, cause: Throwable? = null): Exception(msg, cause)
+class MaxTimestampExceededException(msg: String? = null, cause: Throwable? = null) : Exception(msg, cause)
+class ClockMovedBackwardsException(msg: String? = null, cause: Throwable? = null) : Exception(msg, cause)

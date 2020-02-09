@@ -1,8 +1,5 @@
-package me.ccampo.awsflake
+package me.ccampo.awsflake.core
 
-/**
- * @author Chris Campo
- */
 enum class AWSRegion(val region: String) {
     // US East (N. Virginia)
     US_EAST_1("us-east-1"),

@@ -2,7 +2,6 @@ package me.ccampo.awsflake.core
 
 import java.math.BigInteger
 
-
 // Base62 charset sorted to quickly calculate decimal equivalency by compensating.
 private val charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray()
 

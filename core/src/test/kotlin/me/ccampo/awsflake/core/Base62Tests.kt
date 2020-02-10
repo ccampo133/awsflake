@@ -1,11 +1,9 @@
 package me.ccampo.awsflake.core
 
-import me.ccampo.awsflake.core.decode
-import me.ccampo.awsflake.core.encode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
 import java.math.BigInteger
 import java.util.Random
+import kotlin.test.Test
 
 class Base62Tests {
 

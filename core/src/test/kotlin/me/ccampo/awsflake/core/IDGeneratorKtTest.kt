@@ -34,7 +34,7 @@ class IDGeneratorKtTest {
         val ip = "10.0.128.255"
         val epoch = Instant.parse("2016-01-01T00:00:00Z")
         val generator = IDGenerator.getInstance(reg, epoch, ip)
-        val ids = (1..50).map { encode(generator.generate(), 13) }
+        val ids = (1..50).map { encode(generator.nextId(), 13) }
         val sorted = ids.sorted()
         assertThat(ids).isEqualTo(sorted)
     }

@@ -29,7 +29,7 @@ class AWSFlakeController(private val idGenerator: IDGenerator) {
 
     @Get(produces = [MediaType.TEXT_PLAIN])
     fun generateId(@QueryValue minLength: Int?): String {
-        val id = idGenerator.generate()
+        val id = idGenerator.nextId()
         return encode(id, minLen = minLength)
     }
 }

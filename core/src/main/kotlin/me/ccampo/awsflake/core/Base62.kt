@@ -5,6 +5,14 @@ import java.math.BigInteger
 // Base62 charset sorted to quickly calculate decimal equivalency by compensating.
 private val charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray()
 
+
+/**
+ * Return a base-62 encoded string representing an arbitrary length
+ * big-integer `value`.
+ *
+ * @param minLen: The minimum length of the encoded string to return. If the
+ * encoded value is less than `minLen`, it is padded with zeros.
+ */
 fun encode(value: BigInteger, minLen: Int? = null): String {
     var num = value
     val sb = StringBuilder(1)
@@ -16,15 +24,15 @@ fun encode(value: BigInteger, minLen: Int? = null): String {
 
     // Pad with zeros if necessary
     if (minLen != null && sb.length < minLen) {
-        val padLen = minLen - sb.length
-        val pad = StringBuilder(padLen)
-        for (i in 1..padLen) pad.append("0")
-        return pad.append(sb).toString()
+        return sb.padStart(minLen, '0').toString()
     }
 
     return sb.toString()
 }
 
+/**
+ * Decodes a base-62 encoded value into an arbitrary length big-integer.
+ */
 fun decode(value: String): BigInteger {
     var result = BigInteger.ZERO
     var power = BigInteger.ONE

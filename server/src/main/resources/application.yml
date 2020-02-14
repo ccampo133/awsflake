@@ -1,0 +1,8 @@
+awsflake:
+  region: us-east-1
+  epoch: '2020-01-01T00:00:00Z'
+  ip: 127.0.0.2
+
+micronaut:
+  application:
+    name: awsflake

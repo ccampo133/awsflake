@@ -1,0 +1,87 @@
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            // Add Dokka docs and sources if enabled, but NOT for the sample project
+            if (project.plugins.hasPlugin('org.jetbrains.dokka') && project.name != 'sample') {
+                artifact dokkaJar
+                artifact sourcesJar
+            }
+
+            pom {
+                name = "${rootProject.name}-${project.name}"
+                artifactId = "${rootProject.name}-${project.name}"
+                description = project.description
+                url = 'https://github.com/ccampo133/awsflake'
+
+                licenses {
+                    license {
+                        name = 'MIT'
+                        url = 'https://github.com/ccampo133/awsflake/blob/master/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'ccampo133'
+                        name = 'Chris Campo'
+                        email = 'ccampo.progs@gmail.com'
+                        url = 'https://www.ccampo.me'
+                    }
+                }
+
+                scm {
+                    url = 'https://github.com/ccampo133/awsflake'
+                    connection = 'scm:git:git://github.com/ccampo133/awsflake.git'
+                    developerConnection = 'scm:git:git@github.com:ccampo133/awsflake.git'
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayKey') ? project.property('bintrayKey') : System.getenv('BINTRAY_KEY')
+    publications = ['mavenJava']
+
+    dryRun   = false  // true if you want to run the publish without publishing artifacts
+    publish  = true   // false if you only want to stage the artifacts and then publish manually in Bintray
+    override = false  // true if you want to override existing versions in Bintray
+
+    pkg {
+        repo = 'public'
+        name = rootProject.name
+        desc = rootProject.description
+
+        websiteUrl = 'https://github.com/ccampo133/awsflake'
+        issueTrackerUrl = 'https://github.com/ccampo133/awsflake/issues'
+        vcsUrl = 'https://github.com/ccampo133/awsflake.git'
+
+        licenses = ['MIT']
+
+        githubRepo = 'ccampo133/awsflake'
+
+        version {
+            name = project.version
+            released = new Date()
+            vcsTag = project.version
+
+            mavenCentralSync {
+                sync = true
+                user = project.hasProperty('sonatypeUser') ? project.property('sonatypeUser') : System.getenv('SONATYPE_USER')
+                password = project.hasProperty('sonatypePassword') ? project.property('sonatypePassword') : System.getenv('SONATYPE_PASSWORD')
+                /*
+                 * Optional property. By default the staging repository is closed and artifacts are released
+                 * to Maven Central. You can optionally turn this behavior off (by putting 0 as value) and
+                 * release the version manually.
+                 */
+                close = '1'
+            }
+        }
+    }
+}

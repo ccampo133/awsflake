@@ -42,6 +42,11 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
         @Volatile
         private var INSTANCE: IDGenerator? = null
 
+        /**
+         * Instantiates the single instance of [IDGenerator] and returns it if the instance
+         * does not exist. Otherwise, returns the single instance of [IDGenerator] which
+         * has already been instantiated.
+         */
         fun getInstance(region: AWSRegion, epoch: Instant, ip: String): IDGenerator =
                 INSTANCE ?: lock.withLock {
                     INSTANCE ?: IDGenerator(region, epoch, ip).also { INSTANCE = it }
@@ -76,15 +81,34 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
         }
     }
 
+    /**
+     * A traditional builder used to construct an instance of [IDGenerator].
+     */
     class Builder {
         private var region: AWSRegion? = null
         private var epoch: Instant? = null
         private var ip: String? = null
 
+        /**
+         * Set the generator's region ([AWSRegion]).
+         */
         fun region(region: AWSRegion): Builder = apply { this.region = region }
+
+        /**
+         * Set the generator's epoch.
+         */
         fun epoch(epoch: Instant): Builder = apply { this.epoch = epoch }
+
+        /**
+         * Set the generator's IP (IPv4).
+         */
         fun ip(ip: String): Builder = apply { this.ip = ip }
 
+        /**
+         * Build an instance of [IDGenerator] using the configured values.
+         * Note that [IDGenerator] is a singleton by design, so only one
+         * instance can ever be created.
+         */
         fun build(): IDGenerator {
             return getInstance(
                     region ?: AWSRegion.parse(EC2MetadataUtils.getEC2InstanceRegion()),

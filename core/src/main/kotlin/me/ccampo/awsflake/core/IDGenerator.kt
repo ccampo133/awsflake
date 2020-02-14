@@ -1,8 +1,6 @@
 package me.ccampo.awsflake.core
 
 import com.amazonaws.util.EC2MetadataUtils
-import me.ccampo.awsflake.core.IDGenerator.Builder
-import me.ccampo.awsflake.core.IDGenerator.Companion.getInstance
 import mu.KLogger
 import mu.KotlinLogging
 import java.math.BigInteger
@@ -14,12 +12,12 @@ import kotlin.concurrent.withLock
  * Generates k-sorted, 77 bit IDs, which are guaranteed to be unique in an AWS
  * environment without any node coordination. To limit the possibility of
  * duplicate ID generations (and hence collisions), this class is a singleton,
- * and can only be instantiated once, using the [getInstance] factory method.
+ * and can only be instantiated once, using the `getInstance` factory method.
  * It is not possible to change the epoch, ip, or region during runtime after
  * instantiation. An instance should either be created directly using the
- * [getInstance] method, or by using the provided [Builder].
+ * `getInstance` method, or by using the provided `Builder`.
  *
- * See [getInstance] and [Builder] for more detailed descriptions of the
+ * See `getInstance` and `Builder` for more detailed descriptions of the
  * parameters and general usage.
  *
  * @param region: the AWS region this instance is running in.
@@ -43,8 +41,8 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
         private var INSTANCE: IDGenerator? = null
 
         /**
-         * Instantiates the single instance of [IDGenerator] and returns it if the instance
-         * does not exist. Otherwise, returns the single instance of [IDGenerator] which
+         * Instantiates the single instance of `IDGenerator` and returns it if the instance
+         * does not exist. Otherwise, returns the single instance of `IDGenerator` which
          * has already been instantiated.
          */
         fun getInstance(region: AWSRegion, epoch: Instant, ip: String): IDGenerator =
@@ -71,7 +69,7 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
          *
          * Use `IDGenerator.generate()` to more properly generate a unique identifier.
          *
-         * See [nextId] for information about how to sequentially generate an ID.
+         * See `nextId` for information about how to sequentially generate an ID.
          */
         fun generate(timestamp: Long, regionOrdinal: Int, machineId: Int, seq: Int): BigInteger {
             val part1: Long = timestamp.shl(REGION_BIT_LEN).shl(IP_BIT_LEN)
@@ -82,7 +80,7 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
     }
 
     /**
-     * A traditional builder used to construct an instance of [IDGenerator].
+     * A traditional builder used to construct an instance of `IDGenerator`.
      */
     class Builder {
         private var region: AWSRegion? = null
@@ -90,7 +88,7 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
         private var ip: String? = null
 
         /**
-         * Set the generator's region ([AWSRegion]).
+         * Set the generator's region (`AWSRegion`).
          */
         fun region(region: AWSRegion): Builder = apply { this.region = region }
 
@@ -105,8 +103,8 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
         fun ip(ip: String): Builder = apply { this.ip = ip }
 
         /**
-         * Build an instance of [IDGenerator] using the configured values.
-         * Note that [IDGenerator] is a singleton by design, so only one
+         * Build an instance of `IDGenerator` using the configured values.
+         * Note that `IDGenerator` is a singleton by design, so only one
          * instance can ever be created.
          */
         fun build(): IDGenerator {
@@ -136,7 +134,7 @@ class IDGenerator private constructor(private val region: AWSRegion, epoch: Inst
      * (AWSFlakes). A new unique ID is generated each time this method is
      * called.
      *
-     * See [generate] for more details about the ID generation scheme
+     * See `generate` for more details about the ID generation scheme
      * in general.
      */
     fun nextId(): BigInteger {

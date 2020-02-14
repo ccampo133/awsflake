@@ -67,7 +67,7 @@ enum class AWSRegion(val region: String) {
     companion object {
 
         /**
-         * Parse a string representation of a region to an [AWSRegion].
+         * Parse a string representation of a region to an `AWSRegion`.
          */
         fun parse(name: String): AWSRegion {
             return values().first { name.equals(it.region, ignoreCase = true) }

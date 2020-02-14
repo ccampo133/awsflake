@@ -52,6 +52,3 @@ run.jvmArgs('-noverify', '-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxrem
 // Don't publish this sample project to Bintray
 tasks.publish.enabled = false
 tasks.bintrayUpload.enabled = false
-tasks.dokka.enabled = false
-tasks.dokkaJar.enabled = false
-tasks.sourcesJar.enabled = false
